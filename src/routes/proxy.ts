@@ -3,13 +3,28 @@ import type { ServerContext } from "../config/context.js";
 
 const proxyRouter = new Hono<ServerContext>();
 
+// CORS headers for all responses
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "*",
+};
+
+// Handle OPTIONS preflight requests
+proxyRouter.options("/", (c) => {
+    return c.body(null, {
+        status: 204,
+        headers: corsHeaders,
+    });
+});
+
 // /api/v2/proxy?url=<encoded_url>
 proxyRouter.get("/", async (c) => {
     try {
         const url = c.req.query("url");
 
         if (!url) {
-            return c.json({ error: "URL parameter is required" }, 400);
+            return c.json({ error: "URL parameter is required" }, 400, corsHeaders);
         }
 
         // Decode the URL
@@ -19,7 +34,7 @@ proxyRouter.get("/", async (c) => {
         try {
             new URL(targetUrl);
         } catch {
-            return c.json({ error: "Invalid URL" }, 400);
+            return c.json({ error: "Invalid URL" }, 400, corsHeaders);
         }
 
         // Fetch with appropriate headers to bypass blocking
@@ -38,7 +53,8 @@ proxyRouter.get("/", async (c) => {
             console.error(`[Proxy Error] Failed to fetch: ${targetUrl} ${response.status}`);
             return c.json(
                 { error: `Failed to fetch: ${response.status} ${response.statusText}` },
-                502 // Bad Gateway
+                502, // Bad Gateway
+                corsHeaders
             );
         }
 
@@ -52,9 +68,7 @@ proxyRouter.get("/", async (c) => {
             status: 200,
             headers: {
                 "Content-Type": contentType,
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type",
+                ...corsHeaders,
                 "Cache-Control": "public, max-age=3600",
             },
         });
@@ -62,7 +76,8 @@ proxyRouter.get("/", async (c) => {
         console.error("[Proxy Error]", error);
         return c.json(
             { error: error instanceof Error ? error.message : "Proxy request failed" },
-            500
+            500,
+            corsHeaders
         );
     }
 });
