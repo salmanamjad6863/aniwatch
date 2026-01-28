@@ -37,15 +37,22 @@ proxyRouter.get("/", async (c) => {
             return c.json({ error: "Invalid URL" }, 400, corsHeaders);
         }
 
-        // Fetch with appropriate headers to bypass blocking
+        // Fetch with browser-like headers (critical for bypassing CDN detection)
         const response = await fetch(targetUrl, {
             headers: {
-                "Referer": "https://hianime.to",
-                "Origin": "https://hianime.to",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
                 "Accept": "*/*",
+                "Accept-Encoding": "gzip, deflate, br, zstd",
                 "Accept-Language": "en-US,en;q=0.5",
-                "Accept-Encoding": "gzip, deflate, br",
+                "Origin": "https://megacloud.blog",
+                "Referer": "https://hianime.to/",
+                "Sec-Ch-Ua": '"Chromium";v="134", "Not:A-Brand";v="24", "Brave";v="134"',
+                "Sec-Ch-Ua-Mobile": "?0",
+                "Sec-Ch-Ua-Platform": '"Windows"',
+                "Sec-Fetch-Dest": "empty",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Site": "cross-site",
+                "Sec-Gpc": "1",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
             },
         });
 
