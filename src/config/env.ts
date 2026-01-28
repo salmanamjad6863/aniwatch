@@ -18,9 +18,14 @@ export const SERVERLESS_ENVIRONMENTS = [
 ];
 
 //
+// Use Railway's PORT if available, otherwise fallback to ANIWATCH_API_PORT or 4000
+if (process.env.PORT && !process.env.ANIWATCH_API_PORT) {
+    process.env.ANIWATCH_API_PORT = process.env.PORT;
+}
+
 export const env = cleanEnv(process.env, {
     ANIWATCH_API_PORT: port({
-        default: process.env.PORT ? parseInt(process.env.PORT) : 4000,
+        default: 4000,
         desc: "Port number of the Aniwatch API.",
     }),
 

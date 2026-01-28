@@ -50,10 +50,6 @@ COPY --from=build --chown=zoro:aniwatch /home/app/dist /app/dist
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s CMD [ "npm", "run", "healthcheck" ]
 
 ENV NODE_ENV=production
-ENV PORT=4000
-
-# exposed port
-EXPOSE 4000
 
 CMD [ "node", "dist/src/server.js" ]
 
