@@ -20,7 +20,7 @@ export const SERVERLESS_ENVIRONMENTS = [
 //
 export const env = cleanEnv(process.env, {
     ANIWATCH_API_PORT: port({
-        default: 4000,
+        default: process.env.PORT ? parseInt(process.env.PORT) : 4000,
         desc: "Port number of the Aniwatch API.",
     }),
 
