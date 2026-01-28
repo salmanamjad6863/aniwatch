@@ -13,6 +13,7 @@ import { errorHandler, notFoundHandler } from "./config/errorHandler.js";
 import type { ServerContext } from "./config/context.js";
 
 import { hianimeRouter } from "./routes/hianime.js";
+import { proxyRouter } from "./routes/proxy.js";
 import { logging } from "./middleware/logging.js";
 import { cacheConfigSetter, cacheControl } from "./middleware/cache.js";
 
@@ -56,6 +57,7 @@ app.get("/v", async (c) =>
 app.use(cacheConfigSetter(BASE_PATH.length));
 
 app.basePath(BASE_PATH).route("/hianime", hianimeRouter);
+app.basePath(BASE_PATH).route("/proxy", proxyRouter);
 app.basePath(BASE_PATH).get("/anicrush", (c) =>
     c.text("Anicrush could be implemented in future.")
 );
