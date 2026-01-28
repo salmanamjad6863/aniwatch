@@ -9,7 +9,7 @@ proxyRouter.get("/", async (c) => {
         const url = c.req.query("url");
 
         if (!url) {
-            return c.json({ error: "URL parameter is required" }, { status: 400 });
+            return c.json({ error: "URL parameter is required" }, 400);
         }
 
         // Decode the URL
@@ -19,7 +19,7 @@ proxyRouter.get("/", async (c) => {
         try {
             new URL(targetUrl);
         } catch {
-            return c.json({ error: "Invalid URL" }, { status: 400 });
+            return c.json({ error: "Invalid URL" }, 400);
         }
 
         // Fetch with appropriate headers to bypass blocking
@@ -38,7 +38,7 @@ proxyRouter.get("/", async (c) => {
             console.error(`[Proxy Error] Failed to fetch: ${targetUrl} ${response.status}`);
             return c.json(
                 { error: `Failed to fetch: ${response.status} ${response.statusText}` },
-                { status: response.status }
+                502 // Bad Gateway
             );
         }
 
@@ -62,7 +62,7 @@ proxyRouter.get("/", async (c) => {
         console.error("[Proxy Error]", error);
         return c.json(
             { error: error instanceof Error ? error.message : "Proxy request failed" },
-            { status: 500 }
+            500
         );
     }
 });
