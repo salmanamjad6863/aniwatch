@@ -9,13 +9,20 @@ const corsHeaders = {
     "Access-Control-Allow-Headers": "*",
 };
 
-const CDN_HEADERS = {
+const CDN_HEADERS_HIANIME = {
     Accept: "*/*",
     "Accept-Language": "en-US,en;q=0.5",
     Origin: "https://hianime.to",
     Referer: "https://hianime.to/",
     "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+};
+
+// Some CDNs (fogtwist, megacloud) expect embed-domain referer
+const CDN_HEADERS_MEGACLOUD = {
+    ...CDN_HEADERS_HIANIME,
+    Origin: "https://megacloud.blog",
+    Referer: "https://megacloud.blog/",
 };
 
 proxyRouter.options("/", (c) => {
@@ -38,17 +45,23 @@ proxyRouter.get("/", async (c) => {
         }
 
         const proxyUrl = process.env.IPROYAL_PROXY_URL;
-        let response: Response;
+        const doFetch = async (headers: Record<string, string>): Promise<Response> => {
+            if (proxyUrl) {
+                const undici = await import("undici");
+                const agent = new undici.ProxyAgent(proxyUrl);
+                return undici.fetch(targetUrl, {
+                    dispatcher: agent as any,
+                    headers,
+                });
+            }
+            return fetch(targetUrl, { headers });
+        };
 
-        if (proxyUrl) {
-            const undici = await import("undici");
-            const agent = new undici.ProxyAgent(proxyUrl);
-            response = await undici.fetch(targetUrl, {
-                dispatcher: agent as any,
-                headers: CDN_HEADERS,
-            });
-        } else {
-            response = await fetch(targetUrl, { headers: CDN_HEADERS });
+        let response = await doFetch(CDN_HEADERS_HIANIME);
+
+        // If 403, retry with megacloud referer (fogtwist/megacloud CDNs often require it)
+        if (response.status === 403) {
+            response = await doFetch(CDN_HEADERS_MEGACLOUD);
         }
 
         if (!response.ok) {
