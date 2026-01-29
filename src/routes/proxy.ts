@@ -41,10 +41,10 @@ proxyRouter.get("/", async (c) => {
         let response: Response;
 
         if (proxyUrl) {
-            const { ProxyAgent, fetch: undiciFetch } = await import("undici");
-            const agent = new ProxyAgent(proxyUrl);
-            response = await undiciFetch(targetUrl, {
-                dispatcher: agent,
+            const undici = await import("undici");
+            const agent = new undici.ProxyAgent(proxyUrl);
+            response = await undici.fetch(targetUrl, {
+                dispatcher: agent as any,
                 headers: CDN_HEADERS,
             });
         } else {
