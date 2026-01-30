@@ -30,7 +30,7 @@ proxyRouter.options("/", (c) => {
 });
 
 // /api/v2/proxy?url=<encoded_url>
-// When IPROYAL_PROXY_URL is set (Railway env), requests go through IPRoyal residential proxy to avoid CDN 403.
+// Proxies HLS streams and subtitles. Uses CDN-friendly headers (no residential proxy).
 proxyRouter.get("/", async (c) => {
     try {
         const url = c.req.query("url");
@@ -44,18 +44,8 @@ proxyRouter.get("/", async (c) => {
             return c.json({ error: "Invalid URL" }, 400, corsHeaders);
         }
 
-        const proxyUrl = process.env.IPROYAL_PROXY_URL;
-        const doFetch = async (headers: Record<string, string>): Promise<Response> => {
-            if (proxyUrl) {
-                const undici = await import("undici");
-                const agent = new undici.ProxyAgent(proxyUrl);
-                return undici.fetch(targetUrl, {
-                    dispatcher: agent as any,
-                    headers,
-                });
-            }
-            return fetch(targetUrl, { headers });
-        };
+        const doFetch = (headers: Record<string, string>): Promise<Response> =>
+            fetch(targetUrl, { headers });
 
         let response = await doFetch(CDN_HEADERS_HIANIME);
 
