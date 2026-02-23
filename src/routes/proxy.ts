@@ -32,18 +32,20 @@ proxyRouter.options("/", (c) => {
 // /api/v2/proxy?url=<encoded_url>
 // Proxies HLS streams and subtitles. Uses CDN-friendly headers (no residential proxy).
 proxyRouter.get("/", async (c) => {
+    let targetUrl = "";
     try {
         const url = c.req.query("url");
         if (!url) {
             return c.json({ error: "URL parameter is required" }, 400, corsHeaders);
         }
-        const targetUrl = decodeURIComponent(url);
+        targetUrl = decodeURIComponent(url);
         try {
             new URL(targetUrl);
         } catch {
             return c.json({ error: "Invalid URL" }, 400, corsHeaders);
         }
 
+        console.log("[proxy] fetching", targetUrl);
         const doFetch = (headers: Record<string, string>): Promise<Response> =>
             fetch(targetUrl, { headers });
 
@@ -112,13 +114,14 @@ proxyRouter.get("/", async (c) => {
             },
         });
     } catch (error) {
-        console.error("[Proxy Error]", error);
+        const err = error as Error & { code?: string };
+        console.error("[Proxy Error]", err.message, err.code ?? "", targetUrl || "(url not set)");
         return c.json(
             {
-                error:
-                    error instanceof Error ? error.message : "Proxy request failed",
+                error: "Upstream fetch failed",
+                details: err.code ?? (err instanceof Error ? err.message : "unknown"),
             },
-            500,
+            502,
             corsHeaders
         );
     }
